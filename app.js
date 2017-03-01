@@ -27,7 +27,7 @@ app.get('/reset-work-mode', function (req, res) {
 });
 
 app.get('/set-event-mode', function (req, res) {
-  log('set event mode');
+  setEventMode();
   res.status(200).send('OK');
 });
 
@@ -39,11 +39,13 @@ function setWorkMode() {
   if (detectorMode == MODE_WORK) { // already there
     return;
   }
+  log('set work mode');
   clearTimers();
   detectorMode = MODE_WORK;
   switchIndicatorOn();
   timerOn = setInterval(switchIndicatorOn, 3000);
   timerDelay = setTimeout(function () {
+    switchIndicatorOff();
     timerOff = setInterval(switchIndicatorOff, 3000)
   }, 500);
   log('set work mode - DONE');
@@ -53,10 +55,35 @@ function resetWorkMode() {
   if (detectorMode == MODE_UNDEF) { // already there
     return; // do nothing
   }
+  log('reset work mode');
   clearTimers();
   detectorMode = MODE_UNDEF;
   switchIndicatorOff();
   log('reset work mode - DONE');
+}
+
+function setEventMode() {
+  if (detectorMode == MODE_UNDEF) { // ignore
+    return;
+  }
+  log('set event mode');
+  clearTimers();
+  detectorMode = MODE_EVENT;
+  switchIndicatorOn();
+  timerOn = setInterval(switchIndicatorOn, 650);
+  timerDelay = setTimeout(function () {
+    let iterCount = 0;
+    switchIndicatorOff();
+    timerOff = setInterval(function () {
+      switchIndicatorOff();
+      iterCount += 1;
+      if (iterCount === 2) {
+        clearTimers();
+        setWorkMode();
+      }
+    }, 600)
+  }, 300);
+  log('set event mode - DONE');
 }
 
 function clearTimers() {
@@ -74,6 +101,10 @@ function clearTimers() {
   }
 }
 
+
+//*********************************************************
+// Phys actions for indicator
+
 function switchIndicatorOn() {
   log('ON');
 }
@@ -81,6 +112,9 @@ function switchIndicatorOn() {
 function switchIndicatorOff() {
   log('OFF');
 }
+
+// Phys actions for indicator
+//*********************************************************
 
 
 app.listen(3000, function () {
