@@ -8,18 +8,21 @@ const MODE_WORK = 'WORK';
 const MODE_EVENT = 'EVENT';
 
 let detectorMode = MODE_UNDEF;
+let timerOn = null;
+let timerOff = null;
+let timerDelay = null;
 
 
 ///////////////////////////////////////////////////////////
 // Request handlers
 
 app.get('/set-work-mode', function (req, res) {
-  log('set work mode');
+  setWorkMode();
   res.status(200).send('OK');
 });
 
 app.get('/reset-work-mode', function (req, res) {
-  log('reset work mode');
+  resetWorkMode();
   res.status(200).send('OK');
 });
 
@@ -30,6 +33,54 @@ app.get('/set-event-mode', function (req, res) {
 
 // Request handlers
 ///////////////////////////////////////////////////////////
+
+
+function setWorkMode() {
+  if (detectorMode == MODE_WORK) { // already there
+    return;
+  }
+  clearTimers();
+  detectorMode = MODE_WORK;
+  switchIndicatorOn();
+  timerOn = setInterval(switchIndicatorOn, 3000);
+  timerDelay = setTimeout(function () {
+    timerOff = setInterval(switchIndicatorOff, 3000)
+  }, 500);
+  log('set work mode - DONE');
+}
+
+function resetWorkMode() {
+  if (detectorMode == MODE_UNDEF) { // already there
+    return; // do nothing
+  }
+  clearTimers();
+  detectorMode = MODE_UNDEF;
+  switchIndicatorOff();
+  log('reset work mode - DONE');
+}
+
+function clearTimers() {
+  if (timerDelay) {
+    clearTimeout(timerDelay);
+    timerDelay = null;
+  }
+  if (timerOn) {
+    clearInterval(timerOn);
+    timerOn = null;
+  }
+  if (timerOff) {
+    clearInterval(timerOff);
+    timerOff = null;
+  }
+}
+
+function switchIndicatorOn() {
+  log('ON');
+}
+
+function switchIndicatorOff() {
+  log('OFF');
+}
 
 
 app.listen(3000, function () {
