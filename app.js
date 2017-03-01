@@ -1,11 +1,14 @@
 'use strict';
 
+const exec = require('child_process').exec;
 var express = require('express');
 var app = express();
 
 const MODE_UNDEF = 'UNDEFINED';
 const MODE_WORK = 'WORK';
 const MODE_EVENT = 'EVENT';
+
+const MY_DEBUG = false;
 
 let detectorMode = MODE_UNDEF;
 let timerOn = null;
@@ -106,12 +109,32 @@ function clearTimers() {
 // Phys actions for indicator
 
 function switchIndicatorOn() {
-  log('ON');
+  if (MY_DEBUG) {
+    log('ON');
+  }
+  else {
+    writeIndicatorState(1);
+  }
 }
 
 function switchIndicatorOff() {
-  log('OFF');
+  if (MY_DEBUG) {
+    log('OFF');
+  }
+  else {
+    writeIndicatorState(0);
+  }
 }
+
+function writeIndicatorState(state) {
+  const child = exec(`echo ${state} | sudo tee /sys/class/gpio/gpio4_pi5/value`,
+      (error, stdout, stderr) => {
+        //console.log(`stdout: ${stdout}`);
+        //console.log(`stderr: ${stderr}`);
+        if (error !== null) {
+          console.log(`exec error: ${error}`);
+        }
+      });}
 
 // Phys actions for indicator
 //*********************************************************
